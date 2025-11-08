@@ -1,8 +1,10 @@
 services:
   - type: web
-    name: omnaiai-hub-backend
+    name: omniai-hub-backend
     env: python
-    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
-    pythonVersion: 3.11.9
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+
