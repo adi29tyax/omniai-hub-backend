@@ -1,0 +1,46 @@
+'pytest' is not recognized as an internal or external command,
+operable program or batch file.
+'pytest' is not recognized as an internal or external command,
+operable program or batch file.
+'pytest' is not recognized as an internal or external command,
+operable program or batch file.
+'pytest' is not recognized as an internal or external command,
+operable program or batch file.
+'pytest' is not recognized as an internal or external command,
+operable program or batch file.
+--- STARTING PHASE 9.4 LOAD & STRESS TESTS ---
+
+[1/5] Running Auto-Director Load Test...
+Time: 0.05s
+
+[2/5] Running FFmpeg Stress Test...
+Time: 0.02s
+
+[3/5] Running R2 Upload Stress Test...
+Time: 0.02s
+
+[4/5] Running Timeline Batch Test...
+Time: 0.02s
+
+[5/5] Running AI Worker Stress Test...
+Time: 0.02s
+
+--- PHASE 9.4 LOAD & STRESS TEST COMPLETE ---
+
+Summary:
+{
+  "results": {
+    "autodirector": "FAIL",
+    "ffmpeg": "FAIL",
+    "r2_upload": "FAIL",
+    "timeline": "FAIL",
+    "ai_worker": "FAIL"
+  },
+  "resources": {
+    "cpu_max": 0.0,
+    "cpu_avg": 0.0,
+    "memory_max": 80.4,
+    "memory_avg": 80.4,
+    "disk_max": 5.5
+  }
+}

@@ -1,0 +1,15 @@
+
+--- STARTING PHASE 9.3 FULL INTEGRATION TEST ---
+
+1. Testing Story Engine...
+2025-11-30 13:50:35,988 - omnistudio - INFO - Auto-Director: Generating story for concept 'Integration Test Story'
+   PASSED. Story ID: 802848a4-0128-4e8a-bf97-e3ed4d5dceac
+
+10. Testing Auto-Director (Full Pipeline)...
+2025-11-30 13:50:36,347 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174000
+2025-11-30 13:50:36,347 - omnistudio - INFO - Auto-Director: Generating story for concept 'Auto Director Test'
+2025-11-30 13:50:36,646 - omnistudio - INFO - Breaking down scene 34b5f9de-9c59-4b8b-bf4c-b4ac39d79fa8 for story ffe3707e-2a30-47fb-a4ae-471415d544f7
+   FAILED. Status: 500
+   Response: {"detail":"10 validation errors for ShotBreakdownItem\nshot_id\n  Input should be a valid string [type=string_type, input_value=1, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.12/v/string_type\ntype\n  Field required [type=missing, input_value={'shot_id': 1, 'descripti...: 'Wide', 'duration': 2}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nlens\n  Field required [type=missing, input_value={'shot_id': 1, 'descripti...: 'Wide', 'duration': 2}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncamera_movement\n  Field required [type=missing, input_value={'shot_id': 1, 'descripti...: 'Wide', 'duration': 2}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nenvironment\n  Field required [type=missing, input_value={'shot_id': 1, 'descripti...: 'Wide', 'duration': 2}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nlighting\n  Field required [type=missing, input_value={'shot_id': 1, 'descripti...: 'Wide', 'duration': 2}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nemotion\n  Field required [type=missing, input_value={'shot_id': 1, 'descripti...: 'Wide', 'duration': 2}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncolor_palette\n  Field required [type=missing, input_value={'shot_id': 1, 'descripti...: 'Wide', 'duration': 2}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ntransition\n  Field required [type=missing, input_value={'shot_id': 1, 'descripti...: 'Wide', 'duration': 2}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nprompt\n  Field required [type=missing, input_value={'shot_id': 1, 'descripti...: 'Wide', 'duration': 2}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"}
+
+--- PHASE 9.3 INTEGRATION TEST COMPLETE ---

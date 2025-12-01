@@ -1,0 +1,383 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_autodirector_load.py F                               [100%]
+
+================================== FAILURES ===================================
+___________________________ test_autodirector_load ____________________________
+
+    @pytest.mark.asyncio
+    async def test_autodirector_load():
+        print("\n--- STARTING AUTO-DIRECTOR LOAD TEST (10 Concurrent) ---")
+    
+        # Patch all external services to avoid rate limits/costs
+        with patch("app.modules.director.auto_director_service.call_gemini", new_callable=AsyncMock) as mock_gemini_auto, \
+             patch("app.modules.director.breakdown_service.call_gemini", new_callable=AsyncMock) as mock_gemini_breakdown, \
+             patch("app.modules.director.keyframe_service.call_gemini", new_callable=AsyncMock) as mock_gemini_keyframe, \
+             patch("app.modules.director.animation_service.call_gemini", new_callable=AsyncMock) as mock_gemini_anim, \
+             patch("app.modules.director.audio_service.call_gemini", new_callable=AsyncMock) as mock_gemini_audio, \
+             patch("app.modules.director.sound_designer.call_gemini", new_callable=AsyncMock) as mock_gemini_sfx, \
+             patch("app.modules.director.music_generator.call_gemini", new_callable=AsyncMock) as mock_gemini_bgm, \
+             patch("app.storage.r2.upload_stream_to_r2") as mock_upload_stream, \
+             patch("app.modules.director.timeline_service.upload_public") as mock_upload_public, \
+             patch("app.modules.director.ffmpeg_worker.compile_timeline", new_callable=AsyncMock) as mock_ffmpeg, \
+             patch("app.modules.director.model_workers.call_sfx_gen", new_callable=AsyncMock) as mock_sfx_gen, \
+             patch("app.modules.director.model_workers.call_music_gen", new_callable=AsyncMock) as mock_music_gen:
+    
+            # Configure Mocks to return valid JSON always
+            mock_gemini_auto.return_value = MOCK_STORY_JSON
+            mock_gemini_breakdown.return_value = MOCK_BREAKDOWN_JSON
+            mock_gemini_keyframe.return_value = MOCK_KEYFRAME_JSON
+            mock_gemini_anim.return_value = MOCK_KEYFRAME_JSON
+            mock_gemini_audio.return_value = MOCK_AUDIO_JSON
+            mock_gemini_sfx.return_value = MOCK_SFX_JSON
+            mock_gemini_bgm.return_value = MOCK_BGM_JSON
+    
+            mock_upload_stream.return_value = {"url": "http://mock/file", "key": "key"}
+            mock_upload_public.return_value = {"url": "http://mock/video.mp4", "key": "video.mp4"}
+            mock_ffmpeg.return_value = {"status": "success", "output_path": "out.mp4"}
+            mock_sfx_gen.return_value = "http://mock/sfx.wav"
+            mock_music_gen.return_value = "http://mock/bgm.wav"
+    
+            # Run 10 concurrent requests
+            # Since TestClient is synchronous, we can't truly parallelize it with asyncio.gather
+            # unless we use httpx.AsyncClient or threads.
+            # The user requested "Use asyncio.gather() to start all."
+            # So we should use httpx.AsyncClient.
+    
+            from httpx import AsyncClient
+    
+>           async with AsyncClient(app=app, base_url="http://test") as ac:
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: AsyncClient.__init__() got an unexpected keyword argument 'app'
+
+app\tests\load\test_autodirector_load.py:84: TypeError
+---------------------------- Captured stdout call -----------------------------
+
+--- STARTING AUTO-DIRECTOR LOAD TEST (10 Concurrent) ---
+============================== warnings summary ===============================
+app\config.py:3
+  E:\omniai-studio-universe\hub-backend\app\config.py:3: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Settings(BaseSettings):
+
+app\modules\director\schemas.py:14
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:14: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DirectorProjectResponse(DirectorProjectBase):
+
+app\modules\director\schemas.py:33
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:33: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DirectorStoryResponse(DirectorStoryBase):
+
+app\modules\director\schemas.py:53
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:53: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CharacterResponse(CharacterBase):
+
+app\modules\director\schemas.py:71
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:71: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SceneResponse(SceneBase):
+
+app\modules\director\schemas.py:89
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:89: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ShotResponse(ShotBase):
+
+app\modules\director\schemas.py:112
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:112: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AssetResponse(AssetBase):
+
+app\modules\projects\schema.py:16
+  E:\omniai-studio-universe\hub-backend\app\modules\projects\schema.py:16: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectResponse(BaseModel):
+
+app\modules\project_files\schema.py:17
+  E:\omniai-studio-universe\hub-backend\app\modules\project_files\schema.py:17: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class FileResponse(BaseModel):
+
+app\modules\project_files\schema.py:30
+  E:\omniai-studio-universe\hub-backend\app\modules\project_files\schema.py:30: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class FileTreeItem(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED app/tests/load/test_autodirector_load.py::test_autodirector_load - Typ...
+======================= 1 failed, 10 warnings in 2.36s ========================
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_ffmpeg_stress.py .                                   [100%]
+
+============================== 1 passed in 0.30s ==============================
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_r2_upload_stress.py .                                [100%]
+
+============================== warnings summary ===============================
+app\config.py:3
+  E:\omniai-studio-universe\hub-backend\app\config.py:3: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Settings(BaseSettings):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 1 passed, 1 warning in 0.38s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_timeline_batch.py F                                  [100%]
+
+================================== FAILURES ===================================
+_____________________________ test_timeline_batch _____________________________
+
+    @pytest.mark.asyncio
+    async def test_timeline_batch():
+        print("\n--- STARTING TIMELINE BATCH TEST (30 Concurrent) ---")
+    
+        # Mock ffmpeg and R2
+        with patch("app.modules.director.ffmpeg_worker.compile_timeline", new_callable=AsyncMock) as mock_ffmpeg, \
+             patch("app.modules.director.timeline_service.upload_public") as mock_upload:
+    
+            mock_ffmpeg.return_value = {"status": "success", "output_path": "out.mp4"}
+            mock_upload.return_value = {"url": "http://mock/video.mp4", "key": "video.mp4"}
+    
+            async def run_timeline_build(i):
+                # Create a dummy request
+                request = schemas.TimelineRequest(
+                    project_id=f"123e4567-e89b-12d3-a456-42661417400{i}", # Valid UUID-like
+                    episode_title=f"Timeline Test {i}",
+                    layers=[]
+                )
+    
+                # We need a mock DB session
+                mock_db = MagicMock()
+    
+                try:
+                    # We are testing the service logic orchestration
+                    result = await timeline_service.compile_episode(mock_db, request)
+                    return result.episode_url is not None
+                except Exception as e:
+                    print(f"Timeline {i} failed: {e}")
+                    return False
+    
+            from unittest.mock import MagicMock
+            tasks = [run_timeline_build(i) for i in range(30)]
+>           results = await asyncio.gather(*tasks)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+app\tests\load\test_timeline_batch.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+i = 0
+
+    async def run_timeline_build(i):
+        # Create a dummy request
+>       request = schemas.TimelineRequest(
+            project_id=f"123e4567-e89b-12d3-a456-42661417400{i}", # Valid UUID-like
+            episode_title=f"Timeline Test {i}",
+            layers=[]
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for TimelineRequest
+E       scene_order
+E         Field required [type=missing, input_value={'project_id': '123e4567-...e Test 0', 'layers': []}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.12/v/missing
+
+app\tests\load\test_timeline_batch.py:25: ValidationError
+---------------------------- Captured stdout call -----------------------------
+
+--- STARTING TIMELINE BATCH TEST (30 Concurrent) ---
+============================== warnings summary ===============================
+app\config.py:3
+  E:\omniai-studio-universe\hub-backend\app\config.py:3: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Settings(BaseSettings):
+
+app\modules\director\schemas.py:14
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:14: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DirectorProjectResponse(DirectorProjectBase):
+
+app\modules\director\schemas.py:33
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:33: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DirectorStoryResponse(DirectorStoryBase):
+
+app\modules\director\schemas.py:53
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:53: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CharacterResponse(CharacterBase):
+
+app\modules\director\schemas.py:71
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:71: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SceneResponse(SceneBase):
+
+app\modules\director\schemas.py:89
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:89: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ShotResponse(ShotBase):
+
+app\modules\director\schemas.py:112
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:112: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AssetResponse(AssetBase):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED app/tests/load/test_timeline_batch.py::test_timeline_batch - pydantic_...
+======================== 1 failed, 7 warnings in 1.22s ========================
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_ai_worker_stress.py F                                [100%]
+
+================================== FAILURES ===================================
+____________________________ test_ai_worker_stress ____________________________
+
+    @pytest.mark.asyncio
+    async def test_ai_worker_stress():
+        print("\n--- STARTING AI WORKER STRESS TEST (100 Concurrent) ---")
+    
+        # Mock Gemini to simulate latency
+>       with patch("app.modules.ide.utils.genai.GenerativeModel") as mock_model_cls:
+
+app\tests\load\test_ai_worker_stress.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Program Files\Python311\Lib\unittest\mock.py:1430: in __enter__
+    self.target = self.getter()
+                  ^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'app.modules.ide.utils.genai'
+
+    def resolve_name(name):
+        """
+        Resolve a name to an object.
+    
+        It is expected that `name` will be a string in one of the following
+        formats, where W is shorthand for a valid Python identifier and dot stands
+        for a literal period in these pseudo-regexes:
+    
+        W(.W)*
+        W(.W)*:(W(.W)*)?
+    
+        The first form is intended for backward compatibility only. It assumes that
+        some part of the dotted name is a package, and the rest is an object
+        somewhere within that package, possibly nested inside other objects.
+        Because the place where the package stops and the object hierarchy starts
+        can't be inferred by inspection, repeated attempts to import must be done
+        with this form.
+    
+        In the second form, the caller makes the division point clear through the
+        provision of a single colon: the dotted name to the left of the colon is a
+        package to be imported, and the dotted name to the right is the object
+        hierarchy within that package. Only one import is needed in this form. If
+        it ends with the colon, then a module object is returned.
+    
+        The function will return an object (which might be a module), or raise one
+        of the following exceptions:
+    
+        ValueError - if `name` isn't in a recognised format
+        ImportError - if an import failed when it shouldn't have
+        AttributeError - if a failure occurred when traversing the object hierarchy
+                         within the imported package to get to the desired object.
+        """
+        global _NAME_PATTERN
+        if _NAME_PATTERN is None:
+            # Lazy import to speedup Python startup time
+            import re
+            dotted_words = r'(?!\d)(\w+)(\.(?!\d)(\w+))*'
+            _NAME_PATTERN = re.compile(f'^(?P<pkg>{dotted_words})'
+                                       f'(?P<cln>:(?P<obj>{dotted_words})?)?$',
+                                       re.UNICODE)
+    
+        m = _NAME_PATTERN.match(name)
+        if not m:
+            raise ValueError(f'invalid format: {name!r}')
+        gd = m.groupdict()
+        if gd.get('cln'):
+            # there is a colon - a one-step import is all that's needed
+            mod = importlib.import_module(gd['pkg'])
+            parts = gd.get('obj')
+            parts = parts.split('.') if parts else []
+        else:
+            # no colon - have to iterate to find the package boundary
+            parts = name.split('.')
+            modname = parts.pop(0)
+            # first part *must* be a module/package.
+            mod = importlib.import_module(modname)
+            while parts:
+                p = parts[0]
+                s = f'{modname}.{p}'
+                try:
+                    mod = importlib.import_module(s)
+                    parts.pop(0)
+                    modname = s
+                except ImportError:
+                    break
+        # if we reach this point, mod is the module, already imported, and
+        # parts is the list of parts in the object hierarchy to be traversed, or
+        # an empty list if just the module is wanted.
+        result = mod
+        for p in parts:
+>           result = getattr(result, p)
+                     ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'app.modules.ide.utils' has no attribute 'genai'
+
+C:\Program Files\Python311\Lib\pkgutil.py:715: AttributeError
+---------------------------- Captured stdout call -----------------------------
+
+--- STARTING AI WORKER STRESS TEST (100 Concurrent) ---
+=========================== short test summary info ===========================
+FAILED app/tests/load/test_ai_worker_stress.py::test_ai_worker_stress - Attri...
+============================== 1 failed in 0.49s ==============================
+--- STARTING PHASE 9.4 LOAD & STRESS TESTS ---
+
+[1/5] Running Auto-Director Load Test...
+WARNING: High Memory Usage: 87.2%
+WARNING: High Memory Usage: 87.5%
+WARNING: High Memory Usage: 87.5%
+WARNING: High Memory Usage: 87.6%
+WARNING: High Memory Usage: 86.5%
+Time: 3.55s
+
+[2/5] Running FFmpeg Stress Test...
+Time: 0.99s
+
+[3/5] Running R2 Upload Stress Test...
+Time: 1.11s
+
+[4/5] Running Timeline Batch Test...
+Time: 2.12s
+
+[5/5] Running AI Worker Stress Test...
+Time: 1.18s
+
+--- PHASE 9.4 LOAD & STRESS TEST COMPLETE ---
+
+Summary:
+{
+  "results": {
+    "autodirector": "FAIL",
+    "ffmpeg": "PASS",
+    "r2_upload": "PASS",
+    "timeline": "FAIL",
+    "ai_worker": "FAIL"
+  },
+  "resources": {
+    "cpu_max": 89.5,
+    "cpu_avg": 53.33333333333333,
+    "memory_max": 87.6,
+    "memory_avg": 84.83888888888889,
+    "disk_max": 5.5
+  }
+}

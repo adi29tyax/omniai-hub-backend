@@ -1,0 +1,8 @@
+
+--- STARTING PHASE 9.3 FULL INTEGRATION TEST ---
+
+1. Testing Story Engine...
+2025-11-30 13:46:29,489 - omnistudio - INFO - Auto-Director: Generating story for concept 'Integration Test Story'
+   FAILED. Status: 500
+   Response: {"detail":"Failed to parse story JSON from AI"}
+TEST FAILED: 

@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "E:\omniai-studio-universe\hub-backend\tests\full_integration_test.py", line 11, in <module>
+    from app.main import app
+  File "E:\omniai-studio-universe\hub-backend\tests\..\app\main.py", line 9, in <module>
+    from app.modules.director.timeline_router import router as timeline_router
+  File "E:\omniai-studio-universe\hub-backend\tests\..\app\modules\director\timeline_router.py", line 6, in <module>
+    from . import schemas, timeline_service
+  File "E:\omniai-studio-universe\hub-backend\tests\..\app\modules\director\timeline_service.py", line 5, in <module>
+    from app.storage.r2 import upload_public
+  File "E:\omniai-studio-universe\hub-backend\tests\..\app\storage\r2.py", line 1, in <module>
+    import boto3
+ModuleNotFoundError: No module named 'boto3'

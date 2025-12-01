@@ -1,0 +1,19 @@
+
+--- STARTING PHASE 9.3 FULL INTEGRATION TEST ---
+
+1. Testing Story Engine...
+2025-11-30 13:55:11,704 - omnistudio - INFO - Auto-Director: Generating story for concept 'Integration Test Story'
+   PASSED. Story ID: cca64453-427c-4405-b440-662c97616a00
+
+10. Testing Auto-Director (Full Pipeline)...
+2025-11-30 13:55:12,439 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174000
+2025-11-30 13:55:12,439 - omnistudio - INFO - Auto-Director: Generating story for concept 'Auto Director Test'
+2025-11-30 13:55:12,698 - omnistudio - INFO - Breaking down scene 48ff80e8-349d-47fb-bb26-35f7bc2fabd1 for story c0562229-0da6-43b5-b18d-26a864d4d591
+2025-11-30 13:55:12,785 - omnistudio - INFO - Generating keyframe for shot d26f6896-439d-4efd-83f8-9b412f140b94
+2025-11-30 13:55:12,874 - omnistudio - INFO - Generating animation for shot d26f6896-439d-4efd-83f8-9b412f140b94 with model Luma-Dream-Machine
+2025-11-30 13:55:12,953 - omnistudio - INFO - Generating SFX for shot d26f6896-439d-4efd-83f8-9b412f140b94
+2025-11-30 13:55:13,082 - omnistudio - INFO - Generating keyframe for shot 8c7ac2e7-cb74-4a00-9d91-f43e7a5c4840
+   FAILED. Status: 500
+   Response: {"detail":""}
+
+--- PHASE 9.3 INTEGRATION TEST COMPLETE ---

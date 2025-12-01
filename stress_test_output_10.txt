@@ -1,0 +1,755 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_autodirector_load.py F                               [100%]
+
+================================== FAILURES ===================================
+___________________________ test_autodirector_load ____________________________
+
+    @pytest.mark.asyncio
+    async def test_autodirector_load():
+        print("\n--- STARTING AUTO-DIRECTOR LOAD TEST (10 Concurrent) ---")
+    
+        # Patch all external services to avoid rate limits/costs
+        with patch("app.modules.director.auto_director_service.call_gemini", new_callable=AsyncMock) as mock_gemini_auto, \
+             patch("app.modules.director.breakdown_service.call_gemini", new_callable=AsyncMock) as mock_gemini_breakdown, \
+             patch("app.modules.director.keyframe_service.call_gemini", new_callable=AsyncMock) as mock_gemini_keyframe, \
+             patch("app.modules.director.animation_service.call_gemini", new_callable=AsyncMock) as mock_gemini_anim, \
+             patch("app.modules.director.audio_service.call_gemini", new_callable=AsyncMock) as mock_gemini_audio, \
+             patch("app.modules.director.sound_designer.call_gemini", new_callable=AsyncMock) as mock_gemini_sfx, \
+             patch("app.modules.director.music_generator.call_gemini", new_callable=AsyncMock) as mock_gemini_bgm, \
+             patch("app.storage.r2.upload_stream_to_r2") as mock_upload_stream, \
+             patch("app.modules.director.timeline_service.upload_public") as mock_upload_public, \
+             patch("app.modules.director.ffmpeg_worker.compile_timeline", new_callable=AsyncMock) as mock_ffmpeg, \
+             patch("app.modules.director.model_workers.call_sfx_gen", new_callable=AsyncMock) as mock_sfx_gen, \
+             patch("app.modules.director.model_workers.call_music_gen", new_callable=AsyncMock) as mock_music_gen:
+    
+            # Configure Mocks to return valid JSON always
+            mock_gemini_auto.return_value = MOCK_STORY_JSON
+            mock_gemini_breakdown.return_value = MOCK_BREAKDOWN_JSON
+            mock_gemini_keyframe.return_value = MOCK_KEYFRAME_JSON
+            mock_gemini_anim.return_value = MOCK_KEYFRAME_JSON
+            mock_gemini_audio.return_value = MOCK_AUDIO_JSON
+            mock_gemini_sfx.return_value = MOCK_SFX_JSON
+            mock_gemini_bgm.return_value = MOCK_BGM_JSON
+    
+            mock_upload_stream.return_value = {"url": "http://mock/file", "key": "key"}
+            mock_upload_public.return_value = {"url": "http://mock/video.mp4", "key": "video.mp4"}
+            mock_ffmpeg.return_value = {"status": "success", "output_path": "out.mp4", "temp_dir": "/tmp/mock_dir"}
+            mock_sfx_gen.return_value = "http://mock/sfx.wav"
+            mock_music_gen.return_value = "http://mock/bgm.wav"
+    
+            # Run 10 concurrent requests
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                tasks = []
+                for i in range(10):
+                    tasks.append(ac.post("/director/auto/generate-episode", json={
+                        "project_id": f"123e4567-e89b-12d3-a456-42661417400{i}", # Valid UUIDs
+                        "concept": f"Load Test {i}",
+                        "style": "Anime",
+                        "duration": 1
+                    }))
+    
+                results = await asyncio.gather(*tasks)
+    
+                success_count = 0
+                for res in results:
+                    if res.status_code == 200:
+                        success_count += 1
+                    else:
+                        print(f"Failed: {res.text}")
+    
+                print(f"Success: {success_count}/10")
+>               assert success_count == 10
+E               assert 0 == 10
+
+app\tests\load\test_autodirector_load.py:93: AssertionError
+---------------------------- Captured stdout call -----------------------------
+
+--- STARTING AUTO-DIRECTOR LOAD TEST (10 Concurrent) ---
+2025-11-30 14:21:44,510 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174000
+2025-11-30 14:21:44,510 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 0'
+2025-11-30 14:21:44,925 - omnistudio - INFO - Breaking down scene 0c06bbfa-b6c4-40f8-843e-7504d4b77d7b for story c07af31f-780c-47d0-a75c-3e2a7a2741e4
+2025-11-30 14:21:45,021 - omnistudio - INFO - Generating keyframe for shot 3e75a98a-9d42-4bc7-bac4-244e60d496fc
+2025-11-30 14:21:45,130 - omnistudio - INFO - Generating animation for shot 3e75a98a-9d42-4bc7-bac4-244e60d496fc with model Luma-Dream-Machine
+2025-11-30 14:21:45,244 - omnistudio - INFO - Generating SFX for shot 3e75a98a-9d42-4bc7-bac4-244e60d496fc
+2025-11-30 14:21:45,352 - omnistudio - INFO - Generating BGM for scene 0c06bbfa-b6c4-40f8-843e-7504d4b77d7b
+2025-11-30 14:21:45,438 - omnistudio - INFO - Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174000
+2025-11-30 14:21:45,442 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174001
+2025-11-30 14:21:45,444 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 1'
+2025-11-30 14:21:45,610 - omnistudio - INFO - Breaking down scene f3bad358-ac5d-4a31-9a02-86a14d800c22 for story 9d74e0aa-b4dc-42c3-9554-4bf3c1dbc882
+2025-11-30 14:21:45,692 - omnistudio - INFO - Generating keyframe for shot 1cd4a6ad-6222-4b82-adb6-419d9e7cd010
+2025-11-30 14:21:45,779 - omnistudio - INFO - Generating animation for shot 1cd4a6ad-6222-4b82-adb6-419d9e7cd010 with model Luma-Dream-Machine
+2025-11-30 14:21:45,863 - omnistudio - INFO - Generating SFX for shot 1cd4a6ad-6222-4b82-adb6-419d9e7cd010
+2025-11-30 14:21:45,947 - omnistudio - INFO - Generating BGM for scene f3bad358-ac5d-4a31-9a02-86a14d800c22
+2025-11-30 14:21:46,033 - omnistudio - INFO - Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174001
+2025-11-30 14:21:46,034 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174002
+2025-11-30 14:21:46,034 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 2'
+2025-11-30 14:21:46,203 - omnistudio - INFO - Breaking down scene c548e047-dc38-466d-be9b-e0d80d459188 for story a658579d-566b-4fcc-8d2b-b1879e770324
+2025-11-30 14:21:46,289 - omnistudio - INFO - Generating keyframe for shot 4a281eb4-ecd3-465f-92df-0f98f36a6748
+2025-11-30 14:21:46,373 - omnistudio - INFO - Generating animation for shot 4a281eb4-ecd3-465f-92df-0f98f36a6748 with model Luma-Dream-Machine
+2025-11-30 14:21:46,458 - omnistudio - INFO - Generating SFX for shot 4a281eb4-ecd3-465f-92df-0f98f36a6748
+2025-11-30 14:21:46,622 - omnistudio - INFO - Generating BGM for scene c548e047-dc38-466d-be9b-e0d80d459188
+2025-11-30 14:21:46,707 - omnistudio - INFO - Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174002
+2025-11-30 14:21:46,709 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174003
+2025-11-30 14:21:46,709 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 3'
+2025-11-30 14:21:46,967 - omnistudio - INFO - Breaking down scene 215ed881-f830-4b51-8814-b8ce4f04b615 for story 46904238-acfa-4e2b-ae94-89fc236a8444
+2025-11-30 14:21:47,052 - omnistudio - INFO - Generating keyframe for shot b738f1a6-5aa6-4b21-aa8e-5992c387a19a
+2025-11-30 14:21:47,137 - omnistudio - INFO - Generating animation for shot b738f1a6-5aa6-4b21-aa8e-5992c387a19a with model Luma-Dream-Machine
+2025-11-30 14:21:47,223 - omnistudio - INFO - Generating SFX for shot b738f1a6-5aa6-4b21-aa8e-5992c387a19a
+2025-11-30 14:21:47,306 - omnistudio - INFO - Generating BGM for scene 215ed881-f830-4b51-8814-b8ce4f04b615
+2025-11-30 14:21:47,391 - omnistudio - INFO - Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174003
+2025-11-30 14:21:47,394 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174004
+2025-11-30 14:21:47,394 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 4'
+2025-11-30 14:21:47,561 - omnistudio - INFO - Breaking down scene 69df2f08-7452-4a6b-9a2c-6da8d1b213ef for story d49720fc-011d-4576-be85-726b91c02060
+2025-11-30 14:21:47,646 - omnistudio - INFO - Generating keyframe for shot 8e955c3e-41ac-426d-b0b3-3294c2fcbc63
+2025-11-30 14:21:47,732 - omnistudio - INFO - Generating animation for shot 8e955c3e-41ac-426d-b0b3-3294c2fcbc63 with model Luma-Dream-Machine
+2025-11-30 14:21:47,816 - omnistudio - INFO - Generating SFX for shot 8e955c3e-41ac-426d-b0b3-3294c2fcbc63
+2025-11-30 14:21:47,900 - omnistudio - INFO - Generating BGM for scene 69df2f08-7452-4a6b-9a2c-6da8d1b213ef
+2025-11-30 14:21:47,987 - omnistudio - INFO - Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174004
+2025-11-30 14:21:47,988 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174005
+2025-11-30 14:21:47,990 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 5'
+2025-11-30 14:21:48,157 - omnistudio - INFO - Breaking down scene 36e09fa9-bb03-43cc-9cf7-7114de75470c for story 88d08683-3d42-4292-b419-47c6778755c5
+2025-11-30 14:21:48,242 - omnistudio - INFO - Generating keyframe for shot fc0c91c1-79ea-458d-91f2-16798fc41091
+2025-11-30 14:21:48,327 - omnistudio - INFO - Generating animation for shot fc0c91c1-79ea-458d-91f2-16798fc41091 with model Luma-Dream-Machine
+2025-11-30 14:21:48,411 - omnistudio - INFO - Generating SFX for shot fc0c91c1-79ea-458d-91f2-16798fc41091
+2025-11-30 14:21:48,495 - omnistudio - INFO - Generating BGM for scene 36e09fa9-bb03-43cc-9cf7-7114de75470c
+2025-11-30 14:21:48,581 - omnistudio - INFO - Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174005
+2025-11-30 14:21:48,582 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174006
+2025-11-30 14:21:48,583 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 6'
+2025-11-30 14:21:48,752 - omnistudio - INFO - Breaking down scene 0fd960aa-7e98-445a-b4a2-50239afb424d for story a11d9914-93fc-4867-b547-812a1103cb67
+2025-11-30 14:21:48,835 - omnistudio - INFO - Generating keyframe for shot 1f60d3e8-0a94-40b1-a723-6d75a73b833f
+2025-11-30 14:21:48,922 - omnistudio - INFO - Generating animation for shot 1f60d3e8-0a94-40b1-a723-6d75a73b833f with model Luma-Dream-Machine
+2025-11-30 14:21:49,008 - omnistudio - INFO - Generating SFX for shot 1f60d3e8-0a94-40b1-a723-6d75a73b833f
+2025-11-30 14:21:49,091 - omnistudio - INFO - Generating BGM for scene 0fd960aa-7e98-445a-b4a2-50239afb424d
+2025-11-30 14:21:49,267 - omnistudio - INFO - Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174006
+2025-11-30 14:21:49,269 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174007
+2025-11-30 14:21:49,269 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 7'
+2025-11-30 14:21:49,424 - omnistudio - INFO - Breaking down scene 50444758-c1aa-41a5-bf1c-55ea6fcfb31c for story b9af5738-71b2-4e36-aa6f-47acff82aed5
+2025-11-30 14:21:49,509 - omnistudio - INFO - Generating keyframe for shot 14cc06df-e596-422f-996c-d38bee3ac666
+2025-11-30 14:21:49,594 - omnistudio - INFO - Generating animation for shot 14cc06df-e596-422f-996c-d38bee3ac666 with model Luma-Dream-Machine
+2025-11-30 14:21:49,679 - omnistudio - INFO - Generating SFX for shot 14cc06df-e596-422f-996c-d38bee3ac666
+2025-11-30 14:21:49,763 - omnistudio - INFO - Generating BGM for scene 50444758-c1aa-41a5-bf1c-55ea6fcfb31c
+2025-11-30 14:21:49,848 - omnistudio - INFO - Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174007
+2025-11-30 14:21:49,848 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174008
+2025-11-30 14:21:49,848 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 8'
+2025-11-30 14:21:50,018 - omnistudio - INFO - Breaking down scene 472fcf67-74b3-4fbd-829b-77cecc5e76d3 for story b8111b23-f7cf-4f21-b71a-9b0f922478a7
+2025-11-30 14:21:50,099 - omnistudio - INFO - Generating keyframe for shot 07ac8f96-d1e6-46d7-b4c6-a0ef4978406e
+2025-11-30 14:21:50,189 - omnistudio - INFO - Generating animation for shot 07ac8f96-d1e6-46d7-b4c6-a0ef4978406e with model Luma-Dream-Machine
+2025-11-30 14:21:50,276 - omnistudio - INFO - Generating SFX for shot 07ac8f96-d1e6-46d7-b4c6-a0ef4978406e
+2025-11-30 14:21:50,371 - omnistudio - INFO - Generating BGM for scene 472fcf67-74b3-4fbd-829b-77cecc5e76d3
+2025-11-30 14:21:50,467 - omnistudio - INFO - Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174008
+2025-11-30 14:21:50,475 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174009
+2025-11-30 14:21:50,475 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 9'
+2025-11-30 14:21:50,704 - omnistudio - INFO - Breaking down scene c39f00cd-ef8c-4773-8753-607e4e0e3ded for story a3bf7f20-a61b-4155-a43d-853f006055f1
+2025-11-30 14:21:50,789 - omnistudio - INFO - Generating keyframe for shot 13574782-702b-4b20-a6d1-03cd4aac9cda
+2025-11-30 14:21:50,877 - omnistudio - INFO - Generating animation for shot 13574782-702b-4b20-a6d1-03cd4aac9cda with model Luma-Dream-Machine
+2025-11-30 14:21:51,014 - omnistudio - INFO - Generating SFX for shot 13574782-702b-4b20-a6d1-03cd4aac9cda
+2025-11-30 14:21:51,097 - omnistudio - INFO - Generating BGM for scene c39f00cd-ef8c-4773-8753-607e4e0e3ded
+2025-11-30 14:21:51,182 - omnistudio - INFO - Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174009
+Failed: {"detail":"[Errno 2] No such file or directory: 'out.mp4'"}
+Failed: {"detail":"[Errno 2] No such file or directory: 'out.mp4'"}
+Failed: {"detail":"[Errno 2] No such file or directory: 'out.mp4'"}
+Failed: {"detail":"[Errno 2] No such file or directory: 'out.mp4'"}
+Failed: {"detail":"[Errno 2] No such file or directory: 'out.mp4'"}
+Failed: {"detail":"[Errno 2] No such file or directory: 'out.mp4'"}
+Failed: {"detail":"[Errno 2] No such file or directory: 'out.mp4'"}
+Failed: {"detail":"[Errno 2] No such file or directory: 'out.mp4'"}
+Failed: {"detail":"[Errno 2] No such file or directory: 'out.mp4'"}
+Failed: {"detail":"[Errno 2] No such file or directory: 'out.mp4'"}
+Success: 0/10
+------------------------------ Captured log call ------------------------------
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174000
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 0'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 0c06bbfa-b6c4-40f8-843e-7504d4b77d7b for story c07af31f-780c-47d0-a75c-3e2a7a2741e4
+INFO     omnistudio:keyframe_service.py:17 Generating keyframe for shot 3e75a98a-9d42-4bc7-bac4-244e60d496fc
+INFO     omnistudio:animation_service.py:17 Generating animation for shot 3e75a98a-9d42-4bc7-bac4-244e60d496fc with model Luma-Dream-Machine
+INFO     omnistudio:audio_service.py:78 Generating SFX for shot 3e75a98a-9d42-4bc7-bac4-244e60d496fc
+INFO     omnistudio:audio_service.py:100 Generating BGM for scene 0c06bbfa-b6c4-40f8-843e-7504d4b77d7b
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174000
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174001
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 1'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene f3bad358-ac5d-4a31-9a02-86a14d800c22 for story 9d74e0aa-b4dc-42c3-9554-4bf3c1dbc882
+INFO     omnistudio:keyframe_service.py:17 Generating keyframe for shot 1cd4a6ad-6222-4b82-adb6-419d9e7cd010
+INFO     omnistudio:animation_service.py:17 Generating animation for shot 1cd4a6ad-6222-4b82-adb6-419d9e7cd010 with model Luma-Dream-Machine
+INFO     omnistudio:audio_service.py:78 Generating SFX for shot 1cd4a6ad-6222-4b82-adb6-419d9e7cd010
+INFO     omnistudio:audio_service.py:100 Generating BGM for scene f3bad358-ac5d-4a31-9a02-86a14d800c22
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174001
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174002
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 2'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene c548e047-dc38-466d-be9b-e0d80d459188 for story a658579d-566b-4fcc-8d2b-b1879e770324
+INFO     omnistudio:keyframe_service.py:17 Generating keyframe for shot 4a281eb4-ecd3-465f-92df-0f98f36a6748
+INFO     omnistudio:animation_service.py:17 Generating animation for shot 4a281eb4-ecd3-465f-92df-0f98f36a6748 with model Luma-Dream-Machine
+INFO     omnistudio:audio_service.py:78 Generating SFX for shot 4a281eb4-ecd3-465f-92df-0f98f36a6748
+INFO     omnistudio:audio_service.py:100 Generating BGM for scene c548e047-dc38-466d-be9b-e0d80d459188
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174002
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174003
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 3'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 215ed881-f830-4b51-8814-b8ce4f04b615 for story 46904238-acfa-4e2b-ae94-89fc236a8444
+INFO     omnistudio:keyframe_service.py:17 Generating keyframe for shot b738f1a6-5aa6-4b21-aa8e-5992c387a19a
+INFO     omnistudio:animation_service.py:17 Generating animation for shot b738f1a6-5aa6-4b21-aa8e-5992c387a19a with model Luma-Dream-Machine
+INFO     omnistudio:audio_service.py:78 Generating SFX for shot b738f1a6-5aa6-4b21-aa8e-5992c387a19a
+INFO     omnistudio:audio_service.py:100 Generating BGM for scene 215ed881-f830-4b51-8814-b8ce4f04b615
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174003
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174004
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 4'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 69df2f08-7452-4a6b-9a2c-6da8d1b213ef for story d49720fc-011d-4576-be85-726b91c02060
+INFO     omnistudio:keyframe_service.py:17 Generating keyframe for shot 8e955c3e-41ac-426d-b0b3-3294c2fcbc63
+INFO     omnistudio:animation_service.py:17 Generating animation for shot 8e955c3e-41ac-426d-b0b3-3294c2fcbc63 with model Luma-Dream-Machine
+INFO     omnistudio:audio_service.py:78 Generating SFX for shot 8e955c3e-41ac-426d-b0b3-3294c2fcbc63
+INFO     omnistudio:audio_service.py:100 Generating BGM for scene 69df2f08-7452-4a6b-9a2c-6da8d1b213ef
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174004
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174005
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 5'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 36e09fa9-bb03-43cc-9cf7-7114de75470c for story 88d08683-3d42-4292-b419-47c6778755c5
+INFO     omnistudio:keyframe_service.py:17 Generating keyframe for shot fc0c91c1-79ea-458d-91f2-16798fc41091
+INFO     omnistudio:animation_service.py:17 Generating animation for shot fc0c91c1-79ea-458d-91f2-16798fc41091 with model Luma-Dream-Machine
+INFO     omnistudio:audio_service.py:78 Generating SFX for shot fc0c91c1-79ea-458d-91f2-16798fc41091
+INFO     omnistudio:audio_service.py:100 Generating BGM for scene 36e09fa9-bb03-43cc-9cf7-7114de75470c
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174005
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174006
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 6'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 0fd960aa-7e98-445a-b4a2-50239afb424d for story a11d9914-93fc-4867-b547-812a1103cb67
+INFO     omnistudio:keyframe_service.py:17 Generating keyframe for shot 1f60d3e8-0a94-40b1-a723-6d75a73b833f
+INFO     omnistudio:animation_service.py:17 Generating animation for shot 1f60d3e8-0a94-40b1-a723-6d75a73b833f with model Luma-Dream-Machine
+INFO     omnistudio:audio_service.py:78 Generating SFX for shot 1f60d3e8-0a94-40b1-a723-6d75a73b833f
+INFO     omnistudio:audio_service.py:100 Generating BGM for scene 0fd960aa-7e98-445a-b4a2-50239afb424d
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174006
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174007
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 7'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 50444758-c1aa-41a5-bf1c-55ea6fcfb31c for story b9af5738-71b2-4e36-aa6f-47acff82aed5
+INFO     omnistudio:keyframe_service.py:17 Generating keyframe for shot 14cc06df-e596-422f-996c-d38bee3ac666
+INFO     omnistudio:animation_service.py:17 Generating animation for shot 14cc06df-e596-422f-996c-d38bee3ac666 with model Luma-Dream-Machine
+INFO     omnistudio:audio_service.py:78 Generating SFX for shot 14cc06df-e596-422f-996c-d38bee3ac666
+INFO     omnistudio:audio_service.py:100 Generating BGM for scene 50444758-c1aa-41a5-bf1c-55ea6fcfb31c
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174007
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174008
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 8'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 472fcf67-74b3-4fbd-829b-77cecc5e76d3 for story b8111b23-f7cf-4f21-b71a-9b0f922478a7
+INFO     omnistudio:keyframe_service.py:17 Generating keyframe for shot 07ac8f96-d1e6-46d7-b4c6-a0ef4978406e
+INFO     omnistudio:animation_service.py:17 Generating animation for shot 07ac8f96-d1e6-46d7-b4c6-a0ef4978406e with model Luma-Dream-Machine
+INFO     omnistudio:audio_service.py:78 Generating SFX for shot 07ac8f96-d1e6-46d7-b4c6-a0ef4978406e
+INFO     omnistudio:audio_service.py:100 Generating BGM for scene 472fcf67-74b3-4fbd-829b-77cecc5e76d3
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174008
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174009
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 9'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene c39f00cd-ef8c-4773-8753-607e4e0e3ded for story a3bf7f20-a61b-4155-a43d-853f006055f1
+INFO     omnistudio:keyframe_service.py:17 Generating keyframe for shot 13574782-702b-4b20-a6d1-03cd4aac9cda
+INFO     omnistudio:animation_service.py:17 Generating animation for shot 13574782-702b-4b20-a6d1-03cd4aac9cda with model Luma-Dream-Machine
+INFO     omnistudio:audio_service.py:78 Generating SFX for shot 13574782-702b-4b20-a6d1-03cd4aac9cda
+INFO     omnistudio:audio_service.py:100 Generating BGM for scene c39f00cd-ef8c-4773-8753-607e4e0e3ded
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Load Test Story' for project 123e4567-e89b-12d3-a456-426614174009
+============================== warnings summary ===============================
+app\config.py:3
+  E:\omniai-studio-universe\hub-backend\app\config.py:3: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Settings(BaseSettings):
+
+app\modules\director\schemas.py:14
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:14: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DirectorProjectResponse(DirectorProjectBase):
+
+app\modules\director\schemas.py:33
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:33: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DirectorStoryResponse(DirectorStoryBase):
+
+app\modules\director\schemas.py:53
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:53: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CharacterResponse(CharacterBase):
+
+app\modules\director\schemas.py:71
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:71: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SceneResponse(SceneBase):
+
+app\modules\director\schemas.py:89
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:89: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ShotResponse(ShotBase):
+
+app\modules\director\schemas.py:112
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:112: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AssetResponse(AssetBase):
+
+app\modules\projects\schema.py:16
+  E:\omniai-studio-universe\hub-backend\app\modules\projects\schema.py:16: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectResponse(BaseModel):
+
+app\modules\project_files\schema.py:17
+  E:\omniai-studio-universe\hub-backend\app\modules\project_files\schema.py:17: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class FileResponse(BaseModel):
+
+app\modules\project_files\schema.py:30
+  E:\omniai-studio-universe\hub-backend\app\modules\project_files\schema.py:30: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class FileTreeItem(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED app/tests/load/test_autodirector_load.py::test_autodirector_load - ass...
+======================= 1 failed, 10 warnings in 8.91s ========================
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_ffmpeg_stress.py .                                   [100%]
+
+============================== 1 passed in 0.41s ==============================
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_r2_upload_stress.py .                                [100%]
+
+============================== warnings summary ===============================
+app\config.py:3
+  E:\omniai-studio-universe\hub-backend\app\config.py:3: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Settings(BaseSettings):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 1 passed, 1 warning in 0.41s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_timeline_batch.py F                                  [100%]
+
+================================== FAILURES ===================================
+_____________________________ test_timeline_batch _____________________________
+
+    @pytest.mark.asyncio
+    async def test_timeline_batch():
+        print("\n--- STARTING TIMELINE BATCH TEST (30 Concurrent) ---")
+    
+        # Mock ffmpeg and R2
+        with patch("app.modules.director.ffmpeg_worker.compile_timeline", new_callable=AsyncMock) as mock_ffmpeg, \
+             patch("app.modules.director.timeline_service.upload_public") as mock_upload, \
+             patch("builtins.open", mock_open(read_data=b"dummy video data")):
+    
+            mock_ffmpeg.return_value = {"status": "success", "output_path": "out.mp4", "temp_dir": "/tmp/mock_dir"}
+            mock_upload.return_value = {"url": "http://mock/video.mp4", "key": "video.mp4"}
+    
+            async def run_timeline_build(i):
+                # Create a dummy request
+                request = schemas.TimelineRequest(
+                    project_id=f"123e4567-e89b-12d3-a456-4266141740{i:02d}", # Valid UUID-like
+                    episode_title=f"Timeline Test {i}",
+                    layers=[],
+                    scene_order=[]
+                )
+    
+                # We need a mock DB session
+                mock_db = MagicMock()
+    
+                try:
+                    # We are testing the service logic orchestration
+                    result = await timeline_service.compile_episode(mock_db, request)
+                    return result.episode_url is not None
+                except Exception as e:
+                    print(f"Timeline {i} failed: {e}")
+                    return False
+    
+            tasks = [run_timeline_build(i) for i in range(30)]
+            results = await asyncio.gather(*tasks)
+    
+            success_count = sum(results)
+            print(f"Success: {success_count}/30")
+>           assert success_count == 30
+E           assert 0 == 30
+
+app\tests\load\test_timeline_batch.py:49: AssertionError
+---------------------------- Captured stdout call -----------------------------
+
+--- STARTING TIMELINE BATCH TEST (30 Concurrent) ---
+2025-11-30 14:21:55,847 - omnistudio - INFO - Compiling episode 'Timeline Test 0' for project 123e4567-e89b-12d3-a456-426614174000
+Timeline 0 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,862 - omnistudio - INFO - Compiling episode 'Timeline Test 1' for project 123e4567-e89b-12d3-a456-426614174001
+Timeline 1 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,863 - omnistudio - INFO - Compiling episode 'Timeline Test 2' for project 123e4567-e89b-12d3-a456-426614174002
+Timeline 2 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,865 - omnistudio - INFO - Compiling episode 'Timeline Test 3' for project 123e4567-e89b-12d3-a456-426614174003
+Timeline 3 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,867 - omnistudio - INFO - Compiling episode 'Timeline Test 4' for project 123e4567-e89b-12d3-a456-426614174004
+Timeline 4 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,868 - omnistudio - INFO - Compiling episode 'Timeline Test 5' for project 123e4567-e89b-12d3-a456-426614174005
+Timeline 5 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,870 - omnistudio - INFO - Compiling episode 'Timeline Test 6' for project 123e4567-e89b-12d3-a456-426614174006
+Timeline 6 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,871 - omnistudio - INFO - Compiling episode 'Timeline Test 7' for project 123e4567-e89b-12d3-a456-426614174007
+Timeline 7 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,872 - omnistudio - INFO - Compiling episode 'Timeline Test 8' for project 123e4567-e89b-12d3-a456-426614174008
+Timeline 8 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,874 - omnistudio - INFO - Compiling episode 'Timeline Test 9' for project 123e4567-e89b-12d3-a456-426614174009
+Timeline 9 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,875 - omnistudio - INFO - Compiling episode 'Timeline Test 10' for project 123e4567-e89b-12d3-a456-426614174010
+Timeline 10 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,877 - omnistudio - INFO - Compiling episode 'Timeline Test 11' for project 123e4567-e89b-12d3-a456-426614174011
+Timeline 11 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,878 - omnistudio - INFO - Compiling episode 'Timeline Test 12' for project 123e4567-e89b-12d3-a456-426614174012
+Timeline 12 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,879 - omnistudio - INFO - Compiling episode 'Timeline Test 13' for project 123e4567-e89b-12d3-a456-426614174013
+Timeline 13 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,880 - omnistudio - INFO - Compiling episode 'Timeline Test 14' for project 123e4567-e89b-12d3-a456-426614174014
+Timeline 14 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,881 - omnistudio - INFO - Compiling episode 'Timeline Test 15' for project 123e4567-e89b-12d3-a456-426614174015
+Timeline 15 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,882 - omnistudio - INFO - Compiling episode 'Timeline Test 16' for project 123e4567-e89b-12d3-a456-426614174016
+Timeline 16 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,883 - omnistudio - INFO - Compiling episode 'Timeline Test 17' for project 123e4567-e89b-12d3-a456-426614174017
+Timeline 17 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,883 - omnistudio - INFO - Compiling episode 'Timeline Test 18' for project 123e4567-e89b-12d3-a456-426614174018
+Timeline 18 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,884 - omnistudio - INFO - Compiling episode 'Timeline Test 19' for project 123e4567-e89b-12d3-a456-426614174019
+Timeline 19 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,885 - omnistudio - INFO - Compiling episode 'Timeline Test 20' for project 123e4567-e89b-12d3-a456-426614174020
+Timeline 20 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,887 - omnistudio - INFO - Compiling episode 'Timeline Test 21' for project 123e4567-e89b-12d3-a456-426614174021
+Timeline 21 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,888 - omnistudio - INFO - Compiling episode 'Timeline Test 22' for project 123e4567-e89b-12d3-a456-426614174022
+Timeline 22 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,889 - omnistudio - INFO - Compiling episode 'Timeline Test 23' for project 123e4567-e89b-12d3-a456-426614174023
+Timeline 23 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,890 - omnistudio - INFO - Compiling episode 'Timeline Test 24' for project 123e4567-e89b-12d3-a456-426614174024
+Timeline 24 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,892 - omnistudio - INFO - Compiling episode 'Timeline Test 25' for project 123e4567-e89b-12d3-a456-426614174025
+Timeline 25 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,893 - omnistudio - INFO - Compiling episode 'Timeline Test 26' for project 123e4567-e89b-12d3-a456-426614174026
+Timeline 26 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,894 - omnistudio - INFO - Compiling episode 'Timeline Test 27' for project 123e4567-e89b-12d3-a456-426614174027
+Timeline 27 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,895 - omnistudio - INFO - Compiling episode 'Timeline Test 28' for project 123e4567-e89b-12d3-a456-426614174028
+Timeline 28 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+2025-11-30 14:21:55,896 - omnistudio - INFO - Compiling episode 'Timeline Test 29' for project 123e4567-e89b-12d3-a456-426614174029
+Timeline 29 failed: 1 validation error for TimelineResponse
+asset_id
+  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.12/v/uuid_type
+Success: 0/30
+------------------------------ Captured log call ------------------------------
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 0' for project 123e4567-e89b-12d3-a456-426614174000
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 1' for project 123e4567-e89b-12d3-a456-426614174001
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 2' for project 123e4567-e89b-12d3-a456-426614174002
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 3' for project 123e4567-e89b-12d3-a456-426614174003
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 4' for project 123e4567-e89b-12d3-a456-426614174004
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 5' for project 123e4567-e89b-12d3-a456-426614174005
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 6' for project 123e4567-e89b-12d3-a456-426614174006
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 7' for project 123e4567-e89b-12d3-a456-426614174007
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 8' for project 123e4567-e89b-12d3-a456-426614174008
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 9' for project 123e4567-e89b-12d3-a456-426614174009
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 10' for project 123e4567-e89b-12d3-a456-426614174010
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 11' for project 123e4567-e89b-12d3-a456-426614174011
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 12' for project 123e4567-e89b-12d3-a456-426614174012
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 13' for project 123e4567-e89b-12d3-a456-426614174013
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 14' for project 123e4567-e89b-12d3-a456-426614174014
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 15' for project 123e4567-e89b-12d3-a456-426614174015
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 16' for project 123e4567-e89b-12d3-a456-426614174016
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 17' for project 123e4567-e89b-12d3-a456-426614174017
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 18' for project 123e4567-e89b-12d3-a456-426614174018
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 19' for project 123e4567-e89b-12d3-a456-426614174019
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 20' for project 123e4567-e89b-12d3-a456-426614174020
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 21' for project 123e4567-e89b-12d3-a456-426614174021
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 22' for project 123e4567-e89b-12d3-a456-426614174022
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 23' for project 123e4567-e89b-12d3-a456-426614174023
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 24' for project 123e4567-e89b-12d3-a456-426614174024
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 25' for project 123e4567-e89b-12d3-a456-426614174025
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 26' for project 123e4567-e89b-12d3-a456-426614174026
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 27' for project 123e4567-e89b-12d3-a456-426614174027
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 28' for project 123e4567-e89b-12d3-a456-426614174028
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 29' for project 123e4567-e89b-12d3-a456-426614174029
+============================== warnings summary ===============================
+app\config.py:3
+  E:\omniai-studio-universe\hub-backend\app\config.py:3: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Settings(BaseSettings):
+
+app\modules\director\schemas.py:14
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:14: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DirectorProjectResponse(DirectorProjectBase):
+
+app\modules\director\schemas.py:33
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:33: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DirectorStoryResponse(DirectorStoryBase):
+
+app\modules\director\schemas.py:53
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:53: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CharacterResponse(CharacterBase):
+
+app\modules\director\schemas.py:71
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:71: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SceneResponse(SceneBase):
+
+app\modules\director\schemas.py:89
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:89: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ShotResponse(ShotBase):
+
+app\modules\director\schemas.py:112
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:112: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AssetResponse(AssetBase):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED app/tests/load/test_timeline_batch.py::test_timeline_batch - assert 0 ...
+======================== 1 failed, 7 warnings in 1.41s ========================
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_ai_worker_stress.py .                                [100%]
+
+============================= 1 passed in 48.96s ==============================
+--- STARTING PHASE 9.4 LOAD & STRESS TESTS ---
+
+[1/5] Running Auto-Director Load Test...
+WARNING: High Memory Usage: 85.2%
+WARNING: High Memory Usage: 86.0%
+WARNING: High Memory Usage: 85.8%
+WARNING: High Memory Usage: 85.7%
+WARNING: High Memory Usage: 85.8%
+WARNING: High Memory Usage: 85.7%
+WARNING: High Memory Usage: 85.5%
+WARNING: High Memory Usage: 85.4%
+WARNING: High Memory Usage: 85.4%
+WARNING: High Memory Usage: 85.5%
+WARNING: High Memory Usage: 85.5%
+WARNING: High Memory Usage: 85.5%
+WARNING: High Memory Usage: 85.5%
+WARNING: High Memory Usage: 85.6%
+WARNING: High Memory Usage: 85.8%
+WARNING: High Memory Usage: 85.7%
+Time: 10.02s
+
+[2/5] Running FFmpeg Stress Test...
+WARNING: High Memory Usage: 85.1%
+Time: 1.11s
+
+[3/5] Running R2 Upload Stress Test...
+WARNING: High Memory Usage: 85.1%
+WARNING: High Memory Usage: 85.3%
+Time: 1.17s
+
+[4/5] Running Timeline Batch Test...
+WARNING: High Memory Usage: 85.2%
+WARNING: High Memory Usage: 85.2%
+WARNING: High Memory Usage: 85.4%
+WARNING: High Memory Usage: 85.5%
+Time: 2.40s
+
+[5/5] Running AI Worker Stress Test...
+WARNING: High Memory Usage: 85.8%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 86.2%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 85.8%
+WARNING: High Memory Usage: 85.8%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 86.0%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 86.0%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 86.0%
+WARNING: High Memory Usage: 86.0%
+WARNING: High Memory Usage: 86.0%
+WARNING: High Memory Usage: 85.9%
+WARNING: High Memory Usage: 86.0%
+WARNING: High Memory Usage: 86.1%
+WARNING: High Memory Usage: 86.1%
+WARNING: High Memory Usage: 86.7%
+WARNING: High Memory Usage: 87.0%
+WARNING: High Memory Usage: 87.0%
+WARNING: High Memory Usage: 86.9%
+WARNING: High Memory Usage: 86.9%
+WARNING: High Memory Usage: 87.0%
+WARNING: High Memory Usage: 87.0%
+WARNING: High Memory Usage: 87.0%
+WARNING: High Memory Usage: 86.9%
+WARNING: High Memory Usage: 86.9%
+WARNING: High Memory Usage: 86.9%
+WARNING: High Memory Usage: 87.1%
+WARNING: High Memory Usage: 86.9%
+WARNING: High Memory Usage: 87.0%
+WARNING: High Memory Usage: 86.9%
+WARNING: High Memory Usage: 87.0%
+WARNING: High Memory Usage: 86.7%
+WARNING: High Memory Usage: 86.8%
+WARNING: High Memory Usage: 86.7%
+WARNING: High Memory Usage: 86.7%
+WARNING: High Memory Usage: 86.7%
+WARNING: High Memory Usage: 86.7%
+WARNING: High Memory Usage: 86.7%
+WARNING: High Memory Usage: 86.7%
+WARNING: High Memory Usage: 86.7%
+WARNING: High Memory Usage: 86.8%
+WARNING: High Memory Usage: 86.7%
+WARNING: High Memory Usage: 86.8%
+WARNING: High Memory Usage: 86.7%
+WARNING: High Memory Usage: 86.8%
+WARNING: High Memory Usage: 86.7%
+WARNING: High Memory Usage: 86.9%
+WARNING: High Memory Usage: 86.9%
+WARNING: High Memory Usage: 86.9%
+WARNING: High Memory Usage: 86.9%
+WARNING: High Memory Usage: 87.0%
+WARNING: High Memory Usage: 87.0%
+WARNING: High Memory Usage: 87.0%
+WARNING: High Memory Usage: 86.9%
+WARNING: High Memory Usage: 87.0%
+WARNING: High Memory Usage: 86.9%
+WARNING: High Memory Usage: 87.0%
+WARNING: High Memory Usage: 87.0%
+WARNING: High Memory Usage: 87.1%
+WARNING: High Memory Usage: 87.1%
+WARNING: High Memory Usage: 87.1%
+WARNING: High Memory Usage: 87.1%
+WARNING: High Memory Usage: 87.1%
+WARNING: High Memory Usage: 87.1%
+WARNING: High Memory Usage: 87.1%
+WARNING: High Memory Usage: 87.1%
+WARNING: High Memory Usage: 87.1%
+WARNING: High Memory Usage: 87.2%
+WARNING: High Memory Usage: 87.4%
+WARNING: High Memory Usage: 87.3%
+WARNING: High Memory Usage: 87.5%
+WARNING: High Memory Usage: 87.4%
+WARNING: High Memory Usage: 87.4%
+WARNING: High Memory Usage: 87.4%
+WARNING: High Memory Usage: 87.4%
+WARNING: High Memory Usage: 87.4%
+WARNING: High Memory Usage: 87.4%
+WARNING: High Memory Usage: 87.4%
+WARNING: High Memory Usage: 87.3%
+WARNING: High Memory Usage: 87.3%
+WARNING: High Memory Usage: 87.4%
+WARNING: High Memory Usage: 87.4%
+WARNING: High Memory Usage: 87.4%
+WARNING: High Memory Usage: 87.4%
+WARNING: High Memory Usage: 87.5%
+Time: 50.03s
+
+--- PHASE 9.4 LOAD & STRESS TEST COMPLETE ---
+
+Summary:
+{
+  "results": {
+    "autodirector": "FAIL",
+    "ffmpeg": "PASS",
+    "r2_upload": "PASS",
+    "timeline": "FAIL",
+    "ai_worker": "PASS"
+  },
+  "resources": {
+    "cpu_max": 88.7,
+    "cpu_avg": 52.220155038759685,
+    "memory_max": 87.5,
+    "memory_avg": 86.38759689922473,
+    "disk_max": 5.5
+  }
+}

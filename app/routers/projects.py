@@ -1,20 +1,35 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from ..database import get_db
-from ..models import Project
-from ..schemas import ProjectBase, ProjectOut
-from ..deps import get_current_user
 
-router = APIRouter(prefix="/projects", tags=["projects"])
+from app.database import get_db
+from app.models import Project, User
+from app.schemas.project import ProjectBase, ProjectOut
+from app.deps import get_current_user
+
+router = APIRouter(prefix="/projects", tags=["Projects"])
+
 
 @router.get("/", response_model=List[ProjectOut])
-def list_projects(db: Session = Depends(get_db), user=Depends(get_current_user)):
-    items = db.query(Project).filter(Project.org_id == user.org_id).order_by(Project.id.desc()).all()
+def list_projects(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    items = (
+        db.query(Project)
+        .filter(Project.org_id == user.org_id)
+        .order_by(Project.id.desc())
+        .all()
+    )
     return items
 
+
 @router.post("/", response_model=ProjectOut)
-def create_project(payload: ProjectBase, db: Session = Depends(get_db), user=Depends(get_current_user)):
+def create_project(
+    payload: ProjectBase,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
     pr = Project(
         org_id=user.org_id,
         name=payload.name,
@@ -26,11 +41,21 @@ def create_project(payload: ProjectBase, db: Session = Depends(get_db), user=Dep
     db.refresh(pr)
     return pr
 
+
 @router.delete("/{project_id}")
-def delete_project(project_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    pr = db.query(Project).filter(Project.id == project_id, Project.org_id == user.org_id).first()
+def delete_project(
+    project_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    pr = (
+        db.query(Project)
+        .filter(Project.id == project_id, Project.org_id == user.org_id)
+        .first()
+    )
     if not pr:
-        raise HTTPException(status_code=404, detail="Not found")
+        raise HTTPException(status_code=404, detail="Project not found")
+
     db.delete(pr)
     db.commit()
-    return {"ok": True}
+    return {"ok": True, "message": "Project deleted successfully"}

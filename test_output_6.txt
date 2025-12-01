@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "E:\omniai-studio-universe\hub-backend\tests\full_integration_test.py", line 11, in <module>
+    from app.main import app
+  File "E:\omniai-studio-universe\hub-backend\tests\..\app\main.py", line 10, in <module>
+    app.include_router(director_router, prefix="/director", tags=["Director"])
+    ^^^
+NameError: name 'app' is not defined

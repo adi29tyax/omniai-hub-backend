@@ -1,0 +1,413 @@
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_autodirector_load.py F                               [100%]
+
+================================== FAILURES ===================================
+___________________________ test_autodirector_load ____________________________
+
+    @pytest.mark.asyncio
+    async def test_autodirector_load():
+        print("\n--- STARTING AUTO-DIRECTOR LOAD TEST (10 Concurrent) ---")
+    
+        # Patch all external services to avoid rate limits/costs
+        with patch("app.modules.director.auto_director_service.call_gemini", new_callable=AsyncMock) as mock_gemini_auto, \
+             patch("app.modules.director.breakdown_service.call_gemini", new_callable=AsyncMock) as mock_gemini_breakdown, \
+             patch("app.modules.director.keyframe_service.call_gemini", new_callable=AsyncMock) as mock_gemini_keyframe, \
+             patch("app.modules.director.animation_service.call_gemini", new_callable=AsyncMock) as mock_gemini_anim, \
+             patch("app.modules.director.audio_service.call_gemini", new_callable=AsyncMock) as mock_gemini_audio, \
+             patch("app.modules.director.sound_designer.call_gemini", new_callable=AsyncMock) as mock_gemini_sfx, \
+             patch("app.modules.director.music_generator.call_gemini", new_callable=AsyncMock) as mock_gemini_bgm, \
+             patch("app.storage.r2.upload_stream_to_r2") as mock_upload_stream, \
+             patch("app.modules.director.timeline_service.upload_public") as mock_upload_public, \
+             patch("app.modules.director.ffmpeg_worker.compile_timeline", new_callable=AsyncMock) as mock_ffmpeg, \
+             patch("app.modules.director.model_workers.call_sfx_gen", new_callable=AsyncMock) as mock_sfx_gen, \
+             patch("app.modules.director.model_workers.call_music_gen", new_callable=AsyncMock) as mock_music_gen:
+    
+            # Configure Mocks to return valid JSON always
+            mock_gemini_auto.return_value = MOCK_STORY_JSON
+            mock_gemini_breakdown.return_value = MOCK_BREAKDOWN_JSON
+            mock_gemini_keyframe.return_value = MOCK_KEYFRAME_JSON
+            mock_gemini_anim.return_value = MOCK_KEYFRAME_JSON
+            mock_gemini_audio.return_value = MOCK_AUDIO_JSON
+            mock_gemini_sfx.return_value = MOCK_SFX_JSON
+            mock_gemini_bgm.return_value = MOCK_BGM_JSON
+    
+            mock_upload_stream.return_value = {"url": "http://mock/file", "key": "key"}
+            mock_upload_public.return_value = {"url": "http://mock/video.mp4", "key": "video.mp4"}
+            mock_ffmpeg.return_value = {"status": "success", "output_path": "out.mp4"}
+            mock_sfx_gen.return_value = "http://mock/sfx.wav"
+            mock_music_gen.return_value = "http://mock/bgm.wav"
+    
+            # Run 10 concurrent requests
+            from httpx import AsyncClient, ASGITransport
+    
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                tasks = []
+                for i in range(10):
+                    tasks.append(ac.post("/director/auto/generate-episode", json={
+                        "project_id": f"123e4567-e89b-12d3-a456-42661417400{i}", # Valid UUIDs
+                        "concept": f"Load Test {i}",
+                        "style": "Anime",
+                        "duration": 1
+                    }))
+    
+                results = await asyncio.gather(*tasks)
+    
+                success_count = 0
+                for res in results:
+                    if res.status_code == 200:
+                        success_count += 1
+                    else:
+                        print(f"Failed: {res.text}")
+    
+                print(f"Success: {success_count}/10")
+>               assert success_count == 10
+E               assert 0 == 10
+
+app\tests\load\test_autodirector_load.py:94: AssertionError
+---------------------------- Captured stdout call -----------------------------
+
+--- STARTING AUTO-DIRECTOR LOAD TEST (10 Concurrent) ---
+2025-11-30 14:15:45,899 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174000
+2025-11-30 14:15:45,900 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 0'
+2025-11-30 14:15:46,246 - omnistudio - INFO - Breaking down scene 2e2a2dc3-4c1f-42b2-be41-841c47a8fe3e for story a2cdcd87-786f-442c-88c7-65d33cef3a27
+2025-11-30 14:15:46,336 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174001
+2025-11-30 14:15:46,336 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 1'
+2025-11-30 14:15:46,510 - omnistudio - INFO - Breaking down scene 1d2c3ba0-0cef-45cc-95d2-5fa6b0953473 for story 50f86d26-35a0-439d-acb5-ba28ddb0b5f4
+2025-11-30 14:15:46,594 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174002
+2025-11-30 14:15:46,594 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 2'
+2025-11-30 14:15:46,765 - omnistudio - INFO - Breaking down scene 91883784-2258-4d5f-bc00-dce4acc03afb for story c28caf5e-06db-47a5-915f-4319d933a570
+2025-11-30 14:15:46,848 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174003
+2025-11-30 14:15:46,848 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 3'
+2025-11-30 14:15:47,020 - omnistudio - INFO - Breaking down scene 47657170-3e78-4227-a62b-aac1bf8d442f for story 5287c4fd-d0dd-4540-b143-6b42a03533b9
+2025-11-30 14:15:47,103 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174004
+2025-11-30 14:15:47,104 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 4'
+2025-11-30 14:15:47,267 - omnistudio - INFO - Breaking down scene ddb8f842-044e-4284-bd98-9803cef5b83a for story 438bb380-ef5a-4f90-aab6-6113203f9cb0
+2025-11-30 14:15:47,358 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174005
+2025-11-30 14:15:47,358 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 5'
+2025-11-30 14:15:47,532 - omnistudio - INFO - Breaking down scene eef1835a-cbae-4daf-89b4-f2275351fbf3 for story 54e13c90-748d-4177-ade6-fac9dacf0066
+2025-11-30 14:15:47,625 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174006
+2025-11-30 14:15:47,625 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 6'
+2025-11-30 14:15:47,796 - omnistudio - INFO - Breaking down scene 47befec0-b86f-4d4f-b47f-480b45bcf26f for story aec9ce9d-040e-40f5-989b-0e9a795f0507
+2025-11-30 14:15:47,879 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174007
+2025-11-30 14:15:47,880 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 7'
+2025-11-30 14:15:48,051 - omnistudio - INFO - Breaking down scene 564afcb0-5839-4dae-b9f7-57ca1ad508e6 for story 07f97cdd-f519-4de8-a287-8d7420906f57
+2025-11-30 14:15:48,134 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174008
+2025-11-30 14:15:48,134 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 8'
+2025-11-30 14:15:48,305 - omnistudio - INFO - Breaking down scene e37a9c70-722f-4f21-b4d1-854e2b56777f for story 7904eb09-4866-4f09-ae47-2577e596ceaf
+2025-11-30 14:15:48,389 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174009
+2025-11-30 14:15:48,389 - omnistudio - INFO - Auto-Director: Generating story for concept 'Load Test 9'
+2025-11-30 14:15:48,561 - omnistudio - INFO - Breaking down scene 7558e602-db17-4b19-a3f8-29ff5067c24b for story 253b3e4d-06b1-4211-88fc-9ff84fe59b1b
+Failed: {"detail":"7 validation errors for ShotBreakdownItem\nlens\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncamera_movement\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nenvironment\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nlighting\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nemotion\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncolor_palette\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ntransition\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"}
+Failed: {"detail":"7 validation errors for ShotBreakdownItem\nlens\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncamera_movement\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nenvironment\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nlighting\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nemotion\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncolor_palette\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ntransition\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"}
+Failed: {"detail":"7 validation errors for ShotBreakdownItem\nlens\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncamera_movement\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nenvironment\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nlighting\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nemotion\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncolor_palette\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ntransition\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"}
+Failed: {"detail":"7 validation errors for ShotBreakdownItem\nlens\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncamera_movement\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nenvironment\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nlighting\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nemotion\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncolor_palette\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ntransition\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"}
+Failed: {"detail":"7 validation errors for ShotBreakdownItem\nlens\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncamera_movement\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nenvironment\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nlighting\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nemotion\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncolor_palette\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ntransition\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"}
+Failed: {"detail":"7 validation errors for ShotBreakdownItem\nlens\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncamera_movement\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nenvironment\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nlighting\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nemotion\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncolor_palette\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ntransition\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"}
+Failed: {"detail":"7 validation errors for ShotBreakdownItem\nlens\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncamera_movement\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nenvironment\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nlighting\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nemotion\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncolor_palette\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ntransition\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"}
+Failed: {"detail":"7 validation errors for ShotBreakdownItem\nlens\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncamera_movement\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nenvironment\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nlighting\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nemotion\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncolor_palette\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ntransition\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"}
+Failed: {"detail":"7 validation errors for ShotBreakdownItem\nlens\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncamera_movement\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nenvironment\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nlighting\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nemotion\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncolor_palette\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ntransition\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"}
+Failed: {"detail":"7 validation errors for ShotBreakdownItem\nlens\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncamera_movement\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nenvironment\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nlighting\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nemotion\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ncolor_palette\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\ntransition\n  Field required [type=missing, input_value={'shot_id': '1', 'type': ...ic', 'prompt': 'Prompt'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"}
+Success: 0/10
+------------------------------ Captured log call ------------------------------
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174000
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 0'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 2e2a2dc3-4c1f-42b2-be41-841c47a8fe3e for story a2cdcd87-786f-442c-88c7-65d33cef3a27
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174001
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 1'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 1d2c3ba0-0cef-45cc-95d2-5fa6b0953473 for story 50f86d26-35a0-439d-acb5-ba28ddb0b5f4
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174002
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 2'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 91883784-2258-4d5f-bc00-dce4acc03afb for story c28caf5e-06db-47a5-915f-4319d933a570
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174003
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 3'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 47657170-3e78-4227-a62b-aac1bf8d442f for story 5287c4fd-d0dd-4540-b143-6b42a03533b9
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174004
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 4'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene ddb8f842-044e-4284-bd98-9803cef5b83a for story 438bb380-ef5a-4f90-aab6-6113203f9cb0
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174005
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 5'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene eef1835a-cbae-4daf-89b4-f2275351fbf3 for story 54e13c90-748d-4177-ade6-fac9dacf0066
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174006
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 6'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 47befec0-b86f-4d4f-b47f-480b45bcf26f for story aec9ce9d-040e-40f5-989b-0e9a795f0507
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174007
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 7'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 564afcb0-5839-4dae-b9f7-57ca1ad508e6 for story 07f97cdd-f519-4de8-a287-8d7420906f57
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174008
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 8'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene e37a9c70-722f-4f21-b4d1-854e2b56777f for story 7904eb09-4866-4f09-ae47-2577e596ceaf
+INFO     omnistudio:auto_director_service.py:79 Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174009
+INFO     omnistudio:auto_director_service.py:22 Auto-Director: Generating story for concept 'Load Test 9'
+INFO     omnistudio:breakdown_service.py:22 Breaking down scene 7558e602-db17-4b19-a3f8-29ff5067c24b for story 253b3e4d-06b1-4211-88fc-9ff84fe59b1b
+============================== warnings summary ===============================
+app\config.py:3
+  E:\omniai-studio-universe\hub-backend\app\config.py:3: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Settings(BaseSettings):
+
+app\modules\director\schemas.py:14
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:14: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DirectorProjectResponse(DirectorProjectBase):
+
+app\modules\director\schemas.py:33
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:33: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DirectorStoryResponse(DirectorStoryBase):
+
+app\modules\director\schemas.py:53
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:53: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CharacterResponse(CharacterBase):
+
+app\modules\director\schemas.py:71
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:71: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SceneResponse(SceneBase):
+
+app\modules\director\schemas.py:89
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:89: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ShotResponse(ShotBase):
+
+app\modules\director\schemas.py:112
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:112: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AssetResponse(AssetBase):
+
+app\modules\projects\schema.py:16
+  E:\omniai-studio-universe\hub-backend\app\modules\projects\schema.py:16: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ProjectResponse(BaseModel):
+
+app\modules\project_files\schema.py:17
+  E:\omniai-studio-universe\hub-backend\app\modules\project_files\schema.py:17: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class FileResponse(BaseModel):
+
+app\modules\project_files\schema.py:30
+  E:\omniai-studio-universe\hub-backend\app\modules\project_files\schema.py:30: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class FileTreeItem(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED app/tests/load/test_autodirector_load.py::test_autodirector_load - ass...
+======================= 1 failed, 10 warnings in 4.75s ========================
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_ffmpeg_stress.py .                                   [100%]
+
+============================== 1 passed in 0.41s ==============================
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_r2_upload_stress.py .                                [100%]
+
+============================== warnings summary ===============================
+app\config.py:3
+  E:\omniai-studio-universe\hub-backend\app\config.py:3: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Settings(BaseSettings):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 1 passed, 1 warning in 0.46s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_timeline_batch.py F                                  [100%]
+
+================================== FAILURES ===================================
+_____________________________ test_timeline_batch _____________________________
+
+    @pytest.mark.asyncio
+    async def test_timeline_batch():
+        print("\n--- STARTING TIMELINE BATCH TEST (30 Concurrent) ---")
+    
+        # Mock ffmpeg and R2
+        with patch("app.modules.director.ffmpeg_worker.compile_timeline", new_callable=AsyncMock) as mock_ffmpeg, \
+             patch("app.modules.director.timeline_service.upload_public") as mock_upload:
+    
+            mock_ffmpeg.return_value = {"status": "success", "output_path": "out.mp4"}
+            mock_upload.return_value = {"url": "http://mock/video.mp4", "key": "video.mp4"}
+    
+            async def run_timeline_build(i):
+                # Create a dummy request
+                request = schemas.TimelineRequest(
+                    project_id=f"123e4567-e89b-12d3-a456-42661417400{i}", # Valid UUID-like
+                    episode_title=f"Timeline Test {i}",
+                    layers=[],
+                    scene_order=[]
+                )
+    
+                # We need a mock DB session
+                mock_db = MagicMock()
+    
+                try:
+                    # We are testing the service logic orchestration
+                    result = await timeline_service.compile_episode(mock_db, request)
+                    return result.episode_url is not None
+                except Exception as e:
+                    print(f"Timeline {i} failed: {e}")
+                    return False
+    
+            tasks = [run_timeline_build(i) for i in range(30)]
+>           results = await asyncio.gather(*tasks)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+app\tests\load\test_timeline_batch.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+i = 10
+
+    async def run_timeline_build(i):
+        # Create a dummy request
+>       request = schemas.TimelineRequest(
+            project_id=f"123e4567-e89b-12d3-a456-42661417400{i}", # Valid UUID-like
+            episode_title=f"Timeline Test {i}",
+            layers=[],
+            scene_order=[]
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for TimelineRequest
+E       project_id
+E         Input should be a valid UUID, invalid group length in group 4: expected 12, found 13 [type=uuid_parsing, input_value='123e4567-e89b-12d3-a456-4266141740010', input_type=str]
+E           For further information visit https://errors.pydantic.dev/2.12/v/uuid_parsing
+
+app\tests\load\test_timeline_batch.py:25: ValidationError
+---------------------------- Captured stdout call -----------------------------
+
+--- STARTING TIMELINE BATCH TEST (30 Concurrent) ---
+2025-11-30 14:15:53,836 - omnistudio - INFO - Compiling episode 'Timeline Test 0' for project 123e4567-e89b-12d3-a456-426614174000
+Timeline 0 failed: 'temp_dir'
+2025-11-30 14:15:53,836 - omnistudio - INFO - Compiling episode 'Timeline Test 1' for project 123e4567-e89b-12d3-a456-426614174001
+Timeline 1 failed: 'temp_dir'
+2025-11-30 14:15:53,836 - omnistudio - INFO - Compiling episode 'Timeline Test 2' for project 123e4567-e89b-12d3-a456-426614174002
+Timeline 2 failed: 'temp_dir'
+2025-11-30 14:15:53,836 - omnistudio - INFO - Compiling episode 'Timeline Test 3' for project 123e4567-e89b-12d3-a456-426614174003
+Timeline 3 failed: 'temp_dir'
+2025-11-30 14:15:53,838 - omnistudio - INFO - Compiling episode 'Timeline Test 4' for project 123e4567-e89b-12d3-a456-426614174004
+Timeline 4 failed: 'temp_dir'
+2025-11-30 14:15:53,838 - omnistudio - INFO - Compiling episode 'Timeline Test 5' for project 123e4567-e89b-12d3-a456-426614174005
+Timeline 5 failed: 'temp_dir'
+2025-11-30 14:15:53,838 - omnistudio - INFO - Compiling episode 'Timeline Test 6' for project 123e4567-e89b-12d3-a456-426614174006
+Timeline 6 failed: 'temp_dir'
+2025-11-30 14:15:53,839 - omnistudio - INFO - Compiling episode 'Timeline Test 7' for project 123e4567-e89b-12d3-a456-426614174007
+Timeline 7 failed: 'temp_dir'
+2025-11-30 14:15:53,839 - omnistudio - INFO - Compiling episode 'Timeline Test 8' for project 123e4567-e89b-12d3-a456-426614174008
+Timeline 8 failed: 'temp_dir'
+2025-11-30 14:15:53,839 - omnistudio - INFO - Compiling episode 'Timeline Test 9' for project 123e4567-e89b-12d3-a456-426614174009
+Timeline 9 failed: 'temp_dir'
+------------------------------ Captured log call ------------------------------
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 0' for project 123e4567-e89b-12d3-a456-426614174000
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 1' for project 123e4567-e89b-12d3-a456-426614174001
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 2' for project 123e4567-e89b-12d3-a456-426614174002
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 3' for project 123e4567-e89b-12d3-a456-426614174003
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 4' for project 123e4567-e89b-12d3-a456-426614174004
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 5' for project 123e4567-e89b-12d3-a456-426614174005
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 6' for project 123e4567-e89b-12d3-a456-426614174006
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 7' for project 123e4567-e89b-12d3-a456-426614174007
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 8' for project 123e4567-e89b-12d3-a456-426614174008
+INFO     omnistudio:timeline_service.py:9 Compiling episode 'Timeline Test 9' for project 123e4567-e89b-12d3-a456-426614174009
+============================== warnings summary ===============================
+app\config.py:3
+  E:\omniai-studio-universe\hub-backend\app\config.py:3: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Settings(BaseSettings):
+
+app\modules\director\schemas.py:14
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:14: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DirectorProjectResponse(DirectorProjectBase):
+
+app\modules\director\schemas.py:33
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:33: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class DirectorStoryResponse(DirectorStoryBase):
+
+app\modules\director\schemas.py:53
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:53: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CharacterResponse(CharacterBase):
+
+app\modules\director\schemas.py:71
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:71: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SceneResponse(SceneBase):
+
+app\modules\director\schemas.py:89
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:89: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ShotResponse(ShotBase):
+
+app\modules\director\schemas.py:112
+  E:\omniai-studio-universe\hub-backend\app\modules\director\schemas.py:112: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AssetResponse(AssetBase):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED app/tests/load/test_timeline_batch.py::test_timeline_batch - pydantic_...
+======================== 1 failed, 7 warnings in 1.55s ========================
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.1, pluggy-1.6.0
+rootdir: E:\omniai-studio-universe\hub-backend
+plugins: anyio-4.11.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+app\tests\load\test_ai_worker_stress.py .                                [100%]
+
+============================= 1 passed in 49.74s ==============================
+--- STARTING PHASE 9.4 LOAD & STRESS TESTS ---
+
+[1/5] Running Auto-Director Load Test...
+WARNING: High Memory Usage: 85.3%
+WARNING: High Memory Usage: 85.5%
+WARNING: High Memory Usage: 85.2%
+WARNING: High Memory Usage: 85.2%
+WARNING: High Memory Usage: 85.2%
+WARNING: High Memory Usage: 85.3%
+WARNING: High Memory Usage: 85.3%
+WARNING: High Memory Usage: 85.2%
+Time: 5.91s
+
+[2/5] Running FFmpeg Stress Test...
+Time: 1.14s
+
+[3/5] Running R2 Upload Stress Test...
+Time: 1.25s
+
+[4/5] Running Timeline Batch Test...
+WARNING: High Memory Usage: 85.2%
+WARNING: High Memory Usage: 85.3%
+Time: 2.85s
+
+[5/5] Running AI Worker Stress Test...
+WARNING: High Memory Usage: 85.1%
+WARNING: High Memory Usage: 85.1%
+WARNING: High Memory Usage: 85.2%
+WARNING: High Memory Usage: 85.2%
+WARNING: High Memory Usage: 85.2%
+WARNING: High Memory Usage: 85.2%
+Time: 50.52s
+
+--- PHASE 9.4 LOAD & STRESS TEST COMPLETE ---
+
+Summary:
+{
+  "results": {
+    "autodirector": "FAIL",
+    "ffmpeg": "PASS",
+    "r2_upload": "PASS",
+    "timeline": "FAIL",
+    "ai_worker": "PASS"
+  },
+  "resources": {
+    "cpu_max": 96.9,
+    "cpu_avg": 53.73577235772357,
+    "memory_max": 85.5,
+    "memory_avg": 83.51544715447152,
+    "disk_max": 5.5
+  }
+}

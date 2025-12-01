@@ -1,0 +1,7 @@
+
+--- STARTING PHASE 9.3 FULL INTEGRATION TEST ---
+
+1. Testing Story Engine...
+   FAILED. Status: 422
+   Response: {"detail":[{"type":"uuid_parsing","loc":["body","project_id"],"msg":"Input should be a valid UUID, invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `t` at 1","input":"test-project-1","ctx":{"error":"invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `t` at 1"}}]}
+TEST FAILED: 

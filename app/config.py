@@ -1,17 +1,31 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    APP_NAME: str = "OmniAI Studio Universe API"
-    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000"]
-    DATABASE_URL: str = "postgresql://omni:omni_pass@localhost:5432/omni_core"
+    APP_ENV: str = "production"
 
-    JWT_SECRET_KEY: str = "replace-this-in-.env"
-    JWT_REFRESH_SECRET_KEY: str = "replace-this-refresh-in-.env"
+    DATABASE_URL: str
+    JWT_SECRET_KEY: str
     JWT_ALG: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    FRONTEND_URL: str
+    BACKEND_URL: str
+    OWNER_MODE: bool = True
+
+    # AI Keys
+    GEMINI_API_KEY: str
+    OPENAI_API_KEY: str | None = None
+
+    # Cloudflare R2
+    CLOUDFLARE_ACCOUNT_ID: str
+    CLOUDFLARE_R2_ACCESS_KEY: str
+    CLOUDFLARE_R2_SECRET_KEY: str
+    CLOUDFLARE_R2_BUCKET: str
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 settings = Settings()
+
+if "postgres" in settings.DATABASE_URL and "sslmode" not in settings.DATABASE_URL:
+    settings.DATABASE_URL += "?sslmode=require"

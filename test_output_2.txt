@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "E:\omniai-studio-universe\hub-backend\tests\full_integration_test.py", line 11, in <module>
+    from app.main import app
+  File "E:\omniai-studio-universe\hub-backend\tests\..\app\main.py", line 5, in <module>
+    from app.modules.director.router import router as director_router
+  File "E:\omniai-studio-universe\hub-backend\tests\..\app\modules\director\router.py", line 2, in <module>
+    from sqlalchemy.orm import Session
+ModuleNotFoundError: No module named 'sqlalchemy'

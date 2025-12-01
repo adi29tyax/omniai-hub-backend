@@ -1,0 +1,15 @@
+
+--- STARTING PHASE 9.3 FULL INTEGRATION TEST ---
+
+1. Testing Story Engine...
+2025-11-30 13:49:01,706 - omnistudio - INFO - Auto-Director: Generating story for concept 'Integration Test Story'
+   PASSED. Story ID: c106add1-1b0b-43fd-8899-7a1a6e95d36c
+
+10. Testing Auto-Director (Full Pipeline)...
+2025-11-30 13:49:02,005 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174000
+2025-11-30 13:49:02,005 - omnistudio - INFO - Auto-Director: Generating story for concept 'Auto Director Test'
+2025-11-30 13:49:02,261 - omnistudio - INFO - Breaking down scene d5b0733d-2273-4f57-b3a2-9a4c6998c071 for story fd71422a-c343-45e8-a5a2-343683071d88
+   FAILED. Status: 500
+   Response: {"detail":"Failed to generate valid JSON from AI response"}
+
+--- PHASE 9.3 INTEGRATION TEST COMPLETE ---

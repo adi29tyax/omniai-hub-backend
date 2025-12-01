@@ -1,0 +1,23 @@
+
+--- STARTING PHASE 9.3 FULL INTEGRATION TEST ---
+
+1. Testing Story Engine...
+2025-11-30 13:56:39,758 - omnistudio - INFO - Auto-Director: Generating story for concept 'Integration Test Story'
+   PASSED. Story ID: 87915dc6-fde0-47b1-9393-19ec22c9de6a
+
+10. Testing Auto-Director (Full Pipeline)...
+2025-11-30 13:56:40,217 - omnistudio - INFO - Auto-Director: Starting full episode generation for project 123e4567-e89b-12d3-a456-426614174000
+2025-11-30 13:56:40,217 - omnistudio - INFO - Auto-Director: Generating story for concept 'Auto Director Test'
+2025-11-30 13:56:40,474 - omnistudio - INFO - Breaking down scene 75f6370a-617c-4191-8592-83fb8a8e444f for story 9d9e51c9-24d3-48c5-bef1-cd7fd58299d0
+2025-11-30 13:56:40,558 - omnistudio - INFO - Generating keyframe for shot 32d4fc25-8a5a-471b-98d8-9a11e6c81c8b
+2025-11-30 13:56:40,657 - omnistudio - INFO - Generating animation for shot 32d4fc25-8a5a-471b-98d8-9a11e6c81c8b with model Luma-Dream-Machine
+2025-11-30 13:56:40,740 - omnistudio - INFO - Generating SFX for shot 32d4fc25-8a5a-471b-98d8-9a11e6c81c8b
+2025-11-30 13:56:40,848 - omnistudio - INFO - Generating keyframe for shot 0c59035a-efb1-4a8d-826e-ce7f9b53d0b9
+2025-11-30 13:56:40,934 - omnistudio - INFO - Generating animation for shot 0c59035a-efb1-4a8d-826e-ce7f9b53d0b9 with model Luma-Dream-Machine
+2025-11-30 13:56:41,036 - omnistudio - INFO - Generating SFX for shot 0c59035a-efb1-4a8d-826e-ce7f9b53d0b9
+2025-11-30 13:56:41,124 - omnistudio - INFO - Generating BGM for scene 75f6370a-617c-4191-8592-83fb8a8e444f
+2025-11-30 13:56:41,209 - omnistudio - INFO - Compiling episode 'Test Story' for project 123e4567-e89b-12d3-a456-426614174000
+   FAILED. Status: 500
+   Response: {"detail":"[Errno 2] No such file or directory: 'test_output.mp4'"}
+
+--- PHASE 9.3 INTEGRATION TEST COMPLETE ---

@@ -1,0 +1,8 @@
+
+--- STARTING PHASE 9.3 FULL INTEGRATION TEST ---
+
+1. Testing Story Engine...
+2025-11-30 13:47:08,312 - omnistudio - INFO - Auto-Director: Generating story for concept 'Integration Test Story'
+   FAILED. Status: 500
+   Response: {"detail":"1 validation error for SceneCreate\nscene_id\n  Field required [type=missing, input_value={'story_id': UUID('0a12af...', 'time_of_day': 'Day'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"}
+TEST FAILED: 
