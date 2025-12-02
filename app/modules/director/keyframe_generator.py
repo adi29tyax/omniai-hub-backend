@@ -1,5 +1,7 @@
 from openai import AsyncOpenAI
-client = AsyncOpenAI()
+from app.config import settings
+
+client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
 async def generate_keyframes(shot):
     prompt = f"""

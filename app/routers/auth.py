@@ -12,7 +12,7 @@ from app.config import settings
 router = APIRouter(tags=["Auth"])
 
 # Password hashing (Argon2)
-pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 
 # JWT config
 SECRET_KEY = settings.JWT_SECRET_KEY

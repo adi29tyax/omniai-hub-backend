@@ -16,7 +16,7 @@ router = APIRouter(
 )
 
 # 🔐 Password hashing configuration
-pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 
 # 🔑 Token extraction setup
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")

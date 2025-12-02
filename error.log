@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "E:\omniai-studio-universe\hub-backend\check_import.py", line 4, in <module>
+    from app.main import app
+  File "E:\omniai-studio-universe\hub-backend\app\main.py", line 17, in <module>
+    from app.routers.director_auto import router as director_auto_router
+  File "E:\omniai-studio-universe\hub-backend\app\routers\director_auto.py", line 4, in <module>
+    from app.modules.director.auto_director import auto_direct_episode
+  File "E:\omniai-studio-universe\hub-backend\app\modules\director\auto_director.py", line 6, in <module>
+    from app.modules.director.keyframe_generator import generate_keyframes
+  File "E:\omniai-studio-universe\hub-backend\app\modules\director\keyframe_generator.py", line 2, in <module>
+    client = AsyncOpenAI()
+             ^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Roaming\Python\Python311\site-packages\openai\_client.py", line 316, in __init__
+    raise OpenAIError(
+openai.OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable

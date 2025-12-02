@@ -1,8 +1,9 @@
 from openai import AsyncOpenAI
 from typing import List, Dict, Any
 import json
+from app.config import settings
 
-client = AsyncOpenAI()
+client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 OWNER_EMAIL = "csadityasharma2000@gmail.com"
 
 async def generate_animation_blocks(payload: Dict[str, Any], user: Any) -> List[Dict[str, Any]]:
