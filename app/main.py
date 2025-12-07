@@ -72,16 +72,18 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(SecurityHeadersMiddleware)
 
-# CORS
-# Restrict to ["*"] as per Phase 15.1 instructions for now, but ideally should be specific.
-origins = ["*"]
+origins = [
+    "https://omniai-hub-frontend.vercel.app",
+    "https://www.omniai-hub-frontend.vercel.app",
+    "*"
+]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Global Error Handler
